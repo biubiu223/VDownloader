@@ -1,5 +1,6 @@
 # 自动构建与发布
-#  - 推送 v 开头的标签（例如 v1.0.1）：自动构建安装包 + 绿色版，并创建一个“草稿” Release（确认无误后再手动点发布）
+#  - 推送 v 开头的标签（例如 v1.0.1）：自动构建安装包 + 绿色版，并直接发布 Release
+#    （说明 = CHANGELOG.md 里对应版本的段落 + .github/release-body.md）
 #  - 也可以在 Actions 页面手动运行：只构建，结果在本次运行的 Artifacts 里下载
 name: Build & Release
 
@@ -49,13 +50,14 @@ jobs:
             dist/SHA256SUMS.txt
           if-no-files-found: error
 
-      - name: 创建草稿 Release
+      - name: 发布 Release
         if: github.ref_type == 'tag'
         uses: softprops/action-gh-release@v3
         with:
-          draft: true
+          draft: false
+          make_latest: 'true'
           name: 万能视频下载器 ${{ github.ref_name }}
-          body_path: .github/release-body.md
+          body_path: dist/RELEASE_NOTES.md
           generate_release_notes: true
           files: |
             dist/*.exe

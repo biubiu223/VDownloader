@@ -131,9 +131,9 @@ cd VDownloader
 
 ### 发布新版本
 
-1. 修改 `VDownloader/VDownloader.csproj` 里的 `<Version>`，并更新 `CHANGELOG.md`。
-2. 提交代码后打标签并推送：`git tag v1.0.1`，然后 `git push origin v1.0.1`。
-3. GitHub Actions 会自动构建，并创建一个**草稿 Release**。检查无误后点“Publish release”。
+1. 修改 `VDownloader/VDownloader.csproj` 里的 `<Version>`，并在 `CHANGELOG.md` 里写好这个版本的更新内容。
+2. 提交代码后打标签并推送：`git tag v1.0.2`，然后 `git push origin v1.0.2`。
+3. GitHub Actions 会自动构建并**直接发布 Release**，说明文字取自 `CHANGELOG.md` 里对应版本的段落。已安装旧版的用户启动软件时会收到新版本提示。
 
 ### 项目结构
 
