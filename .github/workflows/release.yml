@@ -32,12 +32,20 @@ jobs:
         shell: pwsh
         run: choco upgrade innosetup -y --no-progress
 
+      # 用 Windows PowerShell 5.1（和本地开发环境一致）。出错时把原因写成注解，在运行摘要页直接可见
       - name: 下载组件并构建
-        shell: pwsh
+        shell: powershell
         run: |
+          $ErrorActionPreference = 'Stop'
           $version = '${{ github.event.inputs.version }}'
           if ('${{ github.ref_type }}' -eq 'tag') { $version = '${{ github.ref_name }}' }
-          ./scripts/build-release.ps1 -Version $version -FetchTools
+          try {
+            & .\scripts\build-release.ps1 -Version $version -FetchTools
+          } catch {
+            $msg = ($_.Exception.Message + ' | ' + $_.InvocationInfo.PositionMessage) -replace "`r?`n", ' '
+            Write-Host "::error title=构建失败::$msg"
+            exit 1
+          }
 
       - name: 上传构建产物
         uses: actions/upload-artifact@v7

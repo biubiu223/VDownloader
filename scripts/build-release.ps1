@@ -18,7 +18,9 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-Add-Type -AssemblyName System.IO.Compression, System.IO.Compression.FileSystem
+# Windows PowerShell 5.1 和 PowerShell 7 里 ZipFile 所在的程序集名字不同
+if ($PSVersionTable.PSEdition -eq 'Core') { Add-Type -AssemblyName System.IO.Compression, System.IO.Compression.ZipFile }
+else { Add-Type -AssemblyName System.IO.Compression, System.IO.Compression.FileSystem }
 
 $root = Split-Path -Parent $PSScriptRoot
 $proj = Join-Path $root 'VDownloader\VDownloader.csproj'
