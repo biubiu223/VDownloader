@@ -35,7 +35,7 @@ public sealed partial class AccountPage : Page
         LevelText.Text = $"LV{st.Level}";
         LoginButton.Visibility = logged ? Visibility.Collapsed : Visibility.Visible;
         // 登录过期时本机可能还留着旧凭据，只要文件在就允许清除
-        LogoutButton.Visibility = logged || File.Exists(AppPaths.BiliCookieFile) ? Visibility.Visible : Visibility.Collapsed;
+        LogoutButton.Visibility = logged || BiliService.HasSavedLogin ? Visibility.Visible : Visibility.Collapsed;
         if (logged && !string.IsNullOrEmpty(st.Face) && Uri.TryCreate(st.Face, UriKind.Absolute, out var face))
             Avatar.ProfilePicture = new BitmapImage(face) { DecodePixelWidth = 144 };
         else

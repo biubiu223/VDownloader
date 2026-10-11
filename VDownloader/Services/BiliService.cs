@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 
@@ -11,8 +12,8 @@ public sealed record BiliStatus(bool? LoggedIn, string Name, string Face, bool V
 }
 
 /// <summary>
-/// B站网页端官方扫码登录。登录后 Cookie 以 Netscape 格式保存，供 yt-dlp 下载高画质使用。
-/// 全程不接触账号密码。
+/// B站网页端官方扫码登录。登录后 Cookie 用 Windows DPAPI 加密保存（bilibili_cookies.dat），
+/// 下载时才临时解密给 yt-dlp 使用。全程不接触账号密码。
 /// </summary>
 public static class BiliService
 {
@@ -71,8 +72,8 @@ public static class BiliService
             if (code == QrSuccess)
             {
                 AddCookiesFromUrl(d.TryGetProperty("url", out var u) ? u.GetString() : null);
-                SaveNetscape(_jar, AppPaths.BiliCookieFile);
-                Log.Info("B站扫码登录成功，Cookie 已保存。");
+                SaveEncrypted(_jar);
+                Log.Info("B站扫码登录成功，登录信息已加密保存。");
             }
             return code;
         }
@@ -96,7 +97,45 @@ public static class BiliService
         public void Dispose() => _http.Dispose();
     }
 
-    private static void SaveNetscape(CookieContainer jar, string path)
+    // ------------------------------------------------------------------ 加密存储
+    private static readonly object MigrateGate = new();
+    private static bool _migrated;
+
+    /// <summary>本机是否保存了登录信息（加密文件，或尚未迁移的旧明文文件）。</summary>
+    public static bool HasSavedLogin => File.Exists(AppPaths.BiliCookieFile) || File.Exists(AppPaths.LegacyBiliCookieFile);
+
+    /// <summary>
+    /// 1.0.0 版本把 Cookie 明文保存在 bilibili_cookies.txt。这里把它转成加密文件，并抹掉明文。
+    /// 只有加密文件确实写好之后才删除明文，避免任何情况下丢失登录。
+    /// </summary>
+    public static void EnsureMigrated()
+    {
+        lock (MigrateGate)
+        {
+            if (_migrated) return;
+            var legacy = AppPaths.LegacyBiliCookieFile;
+            if (!File.Exists(legacy)) { _migrated = true; return; }
+            try
+            {
+                if (!File.Exists(AppPaths.BiliCookieFile))
+                {
+                    SecureStore.WriteEncrypted(AppPaths.BiliCookieFile, File.ReadAllText(legacy));
+                    Log.Info("已把旧版本的明文 B站登录文件转换为加密保存。");
+                }
+                if (File.Exists(AppPaths.BiliCookieFile))
+                {
+                    SecureStore.SecureDelete(legacy);
+                    _migrated = true;
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Warn("转换旧的 B站登录文件失败（下次启动会重试）：" + e.Message);
+            }
+        }
+    }
+
+    private static void SaveEncrypted(CookieContainer jar)
     {
         var sb = new StringBuilder("# Netscape HTTP Cookie File\n# 由 万能视频下载器 生成，请勿分享给他人\n\n");
         foreach (Cookie c in jar.GetAllCookies())
@@ -107,35 +146,60 @@ public static class BiliService
                 : new DateTimeOffset(c.Expires.ToUniversalTime()).ToUnixTimeSeconds();
             sb.Append($"{domain}\tTRUE\t{c.Path}\t{(c.Secure ? "TRUE" : "FALSE")}\t{expires}\t{c.Name}\t{c.Value}\n");
         }
-        File.WriteAllText(path, sb.ToString(), new UTF8Encoding(false));
+        SecureStore.WriteEncrypted(AppPaths.BiliCookieFile, sb.ToString());
+        SecureStore.SecureDelete(AppPaths.LegacyBiliCookieFile);
     }
 
-    private static CookieContainer LoadNetscape(string path)
+    /// <summary>解密并解析登录信息。无法解密时抛出 <see cref="CryptographicException"/>。</summary>
+    private static CookieContainer LoadCookies()
     {
         var jar = new CookieContainer();
-        foreach (var line in File.ReadAllLines(path))
+        foreach (var line in SecureStore.ReadEncrypted(AppPaths.BiliCookieFile).Split('\n'))
         {
-            if (line.Length == 0 || line.StartsWith('#')) continue;
-            var f = line.Split('\t');
+            var l = line.TrimEnd('\r');
+            if (l.Length == 0 || l.StartsWith('#')) continue;
+            var f = l.Split('\t');
             if (f.Length < 7) continue;
             try { jar.Add(new Cookie(f[5], f[6], f[2], f[0])); } catch { }
         }
         return jar;
     }
 
+    /// <summary>给 yt-dlp 用的明文 Cookie（只在内存里，调用方负责写临时文件并安全删除）。没有或无法解密时返回 null。</summary>
+    public static string? GetCookieTextForDownload()
+    {
+        EnsureMigrated();
+        if (!File.Exists(AppPaths.BiliCookieFile)) return null;
+        try { return SecureStore.ReadEncrypted(AppPaths.BiliCookieFile); }
+        catch (Exception e)
+        {
+            Log.Warn("B站登录信息无法解密，本次按未登录下载：" + e.Message);
+            return null;
+        }
+    }
+
+    private const string UndecryptableHint =
+        "保存的登录信息无法解密（可能是从其他电脑或其他 Windows 账户复制来的），请点「退出登录」清除后重新扫码。";
+
     /// <summary>查询登录状态（用户名、头像、大会员）。</summary>
     public static async Task<BiliStatus> RefreshStatusAsync(CancellationToken ct = default)
     {
+        EnsureMigrated();
         BiliStatus result;
+        CookieContainer? jar = null;
         if (!File.Exists(AppPaths.BiliCookieFile))
         {
             result = BiliStatus.NotLoggedIn;
+        }
+        else if (!TryLoad(out jar))
+        {
+            result = BiliStatus.NotLoggedIn with { Error = UndecryptableHint };
         }
         else
         {
             try
             {
-                using var http = CreateClient(LoadNetscape(AppPaths.BiliCookieFile));
+                using var http = CreateClient(jar!);
                 var j = await GetJsonAsync(http, "https://api.bilibili.com/x/web-interface/nav", ct);
                 var d = j.TryGetProperty("data", out var dd) ? dd : default;
                 if (j.GetProperty("code").GetInt32() == 0 && d.ValueKind == JsonValueKind.Object
@@ -170,22 +234,24 @@ public static class BiliService
     /// </summary>
     public static async Task<(bool ServerRevoked, string Message)> LogoutAsync(CancellationToken ct = default)
     {
+        EnsureMigrated();
         bool revoked = false;
         string message = "本机没有保存登录信息。";
-        var path = AppPaths.BiliCookieFile;
         try
         {
-            if (File.Exists(path))
+            if (File.Exists(AppPaths.BiliCookieFile))
             {
-                var jar = LoadNetscape(path);
-                var csrf = jar.GetAllCookies().FirstOrDefault(c => c.Name == "bili_jct")?.Value;
-                if (string.IsNullOrEmpty(csrf))
+                if (!TryLoad(out var jar))
                 {
-                    message = "登录信息里缺少 bili_jct，无法通知 B站服务器，只删除了本机的登录信息。";
+                    message = "登录信息无法解密，无法通知 B站服务器，只删除了本机的文件。";
                 }
                 else
                 {
-                    (revoked, message) = await RevokeOnServerAsync(jar, csrf, ct);
+                    var csrf = jar!.GetAllCookies().FirstOrDefault(c => c.Name == "bili_jct")?.Value;
+                    if (string.IsNullOrEmpty(csrf))
+                        message = "登录信息里缺少 bili_jct，无法通知 B站服务器，只删除了本机的登录信息。";
+                    else
+                        (revoked, message) = await RevokeOnServerAsync(jar, csrf, ct);
                 }
             }
         }
@@ -195,12 +261,28 @@ public static class BiliService
         }
         finally
         {
-            try { File.Delete(path); } catch (Exception e) { Log.Warn("删除 B站 Cookie 文件失败：" + e.Message); }
+            SecureStore.SecureDelete(AppPaths.BiliCookieFile);
+            SecureStore.SecureDelete(AppPaths.LegacyBiliCookieFile);
             Status = BiliStatus.NotLoggedIn;
             StatusChanged?.Invoke();
         }
         Log.Info("已退出 B站登录：" + message);
         return (revoked, message);
+    }
+
+    private static bool TryLoad(out CookieContainer? jar)
+    {
+        try
+        {
+            jar = LoadCookies();
+            return true;
+        }
+        catch (Exception e) when (e is CryptographicException or IOException)
+        {
+            Log.Warn("读取 B站登录信息失败：" + e.Message);
+            jar = null;
+            return false;
+        }
     }
 
     private static async Task<(bool, string)> RevokeOnServerAsync(CookieContainer jar, string csrf, CancellationToken ct)

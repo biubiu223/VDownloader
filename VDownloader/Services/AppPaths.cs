@@ -22,8 +22,14 @@ public static class AppPaths
 {
     public static string BaseDir { get; } = AppContext.BaseDirectory;
 
-    public static string DataDir { get; } = Ensure(Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "VDownloader"));
+    /// <summary>
+    /// 数据目录。默认 %LOCALAPPDATA%\VDownloader；
+    /// 设置环境变量 VDOWNLOADER_DATA_DIR 可以改到别处（用于测试，或想把数据和程序放在一起）。
+    /// </summary>
+    public static string DataDir { get; } = Ensure(
+        Environment.GetEnvironmentVariable("VDOWNLOADER_DATA_DIR") is { Length: > 0 } custom
+            ? Path.GetFullPath(custom)
+            : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "VDownloader"));
 
     /// <summary>可写的组件目录（在线下载的 yt-dlp / ffmpeg / deno 放这里）。</summary>
     public static string UserToolsDir => Ensure(Path.Combine(DataDir, "tools"));
@@ -32,7 +38,11 @@ public static class AppPaths
     public static string BundledToolsDir => Path.Combine(BaseDir, "tools");
 
     public static string SettingsFile => Path.Combine(DataDir, "settings.json");
-    public static string BiliCookieFile => Path.Combine(DataDir, "bilibili_cookies.txt");
+    /// <summary>B站登录信息（DPAPI 加密）。</summary>
+    public static string BiliCookieFile => Path.Combine(DataDir, "bilibili_cookies.dat");
+
+    /// <summary>1.0.0 版本的明文登录文件，启动时会自动迁移为加密文件并抹掉。</summary>
+    public static string LegacyBiliCookieFile => Path.Combine(DataDir, "bilibili_cookies.txt");
     public static string LogFile => Path.Combine(DataDir, "app.log");
     public static string IconFile => Path.Combine(BaseDir, "Assets", "app.ico");
 

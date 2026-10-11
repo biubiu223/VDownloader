@@ -23,5 +23,6 @@ __pycache__/
 Thumbs.db
 Desktop.ini
 
-# ---- 千万不要提交登录凭据 ----
+# ---- 千万不要提交登录凭据（即使是加密的） ----
 *cookies*.txt
+*cookies*.dat

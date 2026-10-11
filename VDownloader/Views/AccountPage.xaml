@@ -188,7 +188,7 @@
                 Margin="0,16,0,0"
                 IsClosable="False"
                 IsOpen="True"
-                Message="登录凭据只保存在本机（%LOCALAPPDATA%\VDownloader\bilibili_cookies.txt），不会上传到任何地方。点「退出登录」会先让这次登录在 B站服务器上失效，再删除本机文件。请只用于下载你有权观看的内容。"
+                Message="登录凭据用 Windows 数据保护（DPAPI）加密后只保存在本机，文件被拷到其他电脑或其他 Windows 账户上都无法解密，也不会上传到任何地方。点「退出登录」会先让这次登录在 B站服务器上失效，再删除本机文件。请只用于下载你有权观看的内容。"
                 Severity="Informational"
                 Title="隐私说明" />
         </StackPanel>

@@ -26,6 +26,9 @@ public partial class App : Application
     {
         AppSettings.Load();
         Log.Info($"万能视频下载器 v{AppInfo.Version} 启动，数据目录：{AppPaths.DataDir}");
+        // 安全相关的启动清理：抹掉上次异常退出残留的临时明文 Cookie，把旧版明文登录文件转为加密保存
+        SecureStore.CleanupStaleTempFiles();
+        BiliService.EnsureMigrated();
         MainWindow = new MainWindow();
         MainWindow.Activate();
     }

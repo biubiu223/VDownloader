@@ -2,6 +2,19 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.0.1] - 2026-10-11
+
+### 安全
+
+- B站登录信息改为用 Windows 数据保护（DPAPI）**加密保存**（`bilibili_cookies.dat`）。文件被拷到其他电脑或其他 Windows 账户上无法解密。
+- 从 1.0.0 升级时，旧版的明文 `bilibili_cookies.txt` 会自动转成加密文件，并先用 0 覆盖再删除明文。
+- 下载时临时解密给 yt-dlp 使用的 Cookie 副本，用完立即覆盖删除；程序启动时还会清理异常退出残留的副本。
+- 退出登录时，登录信息改为先覆盖再删除。
+
+### 新增
+
+- 支持用环境变量 `VDOWNLOADER_DATA_DIR` 自定义数据目录。
+
 ## [1.0.0] - 2026-10-11
 
 第一个正式版本。
@@ -24,4 +37,5 @@
 - 下载完成时弹出系统通知；启动时检查 GitHub 上的新版本。
 - 安装包（Inno Setup，简体中文 / 英文）和绿色版 zip。
 
+[1.0.1]: https://github.com/biubiu223/VDownloader/releases/tag/v1.0.1
 [1.0.0]: https://github.com/biubiu223/VDownloader/releases/tag/v1.0.0

@@ -26,14 +26,16 @@ public static class YtDlp
         var proxy = ProxyFor(url);
         if (proxy is not null) a.AddRange(["--proxy", proxy]);
 
+        // B站登录信息平时是加密的；yt-dlp 只能读明文文件，所以只在本次运行期间解密出一份临时副本，
+        // 进程结束后立刻用 SecureStore.SecureDelete 覆盖删除。
         tempCookie = null;
-        if (UrlTools.IsBili(url) && File.Exists(AppPaths.BiliCookieFile))
+        if (UrlTools.IsBili(url) && BiliService.GetCookieTextForDownload() is { } biliCookies)
         {
-            tempCookie = CopyToTemp(AppPaths.BiliCookieFile);
+            tempCookie = SecureStore.WriteTempPlaintext(biliCookies);
         }
         else if (s.CookieMode == "file" && File.Exists(s.CookieFile))
         {
-            tempCookie = CopyToTemp(s.CookieFile);
+            tempCookie = SecureStore.WriteTempPlaintext(File.ReadAllText(s.CookieFile));
         }
         else if (s.CookieMode == "browser" && !string.IsNullOrWhiteSpace(s.CookieBrowser))
         {
@@ -54,18 +56,8 @@ public static class YtDlp
         return null;
     }
 
-    private static string CopyToTemp(string file)
-    {
-        var tmp = Path.Combine(Path.GetTempPath(), $"vdl_cookie_{Guid.NewGuid():N}.txt");
-        File.Copy(file, tmp, true);
-        return tmp;
-    }
-
-    public static void DeleteQuietly(string? path)
-    {
-        if (path is null) return;
-        try { File.Delete(path); } catch { }
-    }
+    /// <summary>删除临时 Cookie 副本（先覆盖再删除）。</summary>
+    public static void DeleteQuietly(string? path) => SecureStore.SecureDelete(path);
 
     /// <summary>解析链接：返回 yt-dlp -J 的 JSON（合集只列出条目，不逐个解析）。</summary>
     public static async Task<JsonDocument> ProbeAsync(string url, bool playlist, CancellationToken ct = default)

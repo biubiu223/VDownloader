@@ -71,7 +71,9 @@
 | 已登录 | 1080P、1080P60 |
 | 大会员 | 1080P+、4K、HDR、杜比视界、8K、Hi-Res 无损 / 杜比全景声 |
 
-- 登录凭据只保存在本机 `%LOCALAPPDATA%\VDownloader\bilibili_cookies.txt`。
+- 登录凭据用 **Windows 数据保护（DPAPI）加密**后，只保存在本机 `%LOCALAPPDATA%\VDownloader\bilibili_cookies.dat`。文件被拷到其他电脑或其他 Windows 账户上都无法解密。
+- 下载 B站视频时，程序会临时解密出一份副本给 yt-dlp 使用，下载结束后立即覆盖删除。
+- 从 1.0.0 升级时，旧的明文文件 `bilibili_cookies.txt` 会被自动转成加密文件，明文会被抹掉。
 - 点 **退出登录** 会先让这次登录在 B站服务器上失效，再删除本机文件。
 - 卸载时也可以选择一并删除。
 
