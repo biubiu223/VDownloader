@@ -1,0 +1,17 @@
+* text=auto
+
+# Windows 工具链文件统一用 CRLF
+*.cs        text eol=crlf
+*.xaml      text eol=crlf
+*.csproj    text eol=crlf
+*.manifest  text eol=crlf
+*.ps1       text eol=crlf
+*.iss       text eol=crlf
+*.isl       text eol=crlf
+
+*.md        text eol=lf
+*.yml       text eol=lf
+
+*.png       binary
+*.ico       binary
+*.exe       binary

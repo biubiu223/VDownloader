@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="VDownloader.Views.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:VDownloader.Controls"
+    NavigationCacheMode="Required">
+
+    <ScrollViewer>
+        <StackPanel MaxWidth="1040" Padding="{StaticResource PagePadding}" HorizontalAlignment="Stretch" Spacing="4">
+            <TextBlock Margin="0,36,0,4" Style="{StaticResource TitleTextBlockStyle}" Text="设置" />
+
+            <!-- ============ 外观 ============ -->
+            <TextBlock Style="{StaticResource SettingsGroupHeaderStyle}" Text="外观" />
+            <controls:SettingsCard Description="选择浅色、深色，或跟随 Windows 设置" Glyph="&#xE790;" Header="应用主题">
+                <ComboBox x:Name="ThemeBox" MinWidth="160" SelectionChanged="ThemeBox_SelectionChanged">
+                    <ComboBoxItem Content="跟随系统" Tag="system" />
+                    <ComboBoxItem Content="浅色" Tag="light" />
+                    <ComboBoxItem Content="深色" Tag="dark" />
+                </ComboBox>
+            </controls:SettingsCard>
+
+            <!-- ============ 下载 ============ -->
+            <TextBlock Style="{StaticResource SettingsGroupHeaderStyle}" Text="下载" />
+            <controls:SettingsCard x:Name="DirCard" Glyph="&#xE838;" Header="保存位置">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button Click="OpenDir_Click" Content="打开" />
+                    <Button Click="ChangeDir_Click" Content="更改…" />
+                </StackPanel>
+            </controls:SettingsCard>
+            <controls:SettingsCard Description="同时下载太多可能会被网站限速，建议 2～3 个" Glyph="&#xE8FD;" Header="同时下载任务数">
+                <NumberBox
+                    x:Name="ConcurrentBox"
+                    Width="130"
+                    Maximum="5"
+                    Minimum="1"
+                    SpinButtonPlacementMode="Inline"
+                    ValueChanged="ConcurrentBox_ValueChanged" />
+            </controls:SettingsCard>
+            <controls:SettingsCard Description="yt-dlp 输出模板。默认是「标题 [视频ID].扩展名」" Glyph="&#xE8AC;" Header="文件名格式">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBox x:Name="TemplateBox" Width="300" LostFocus="TemplateBox_LostFocus" />
+                    <Button Click="ResetTemplate_Click" ToolTipService.ToolTip="恢复默认">
+                        <FontIcon FontSize="14" Glyph="&#xE777;" />
+                    </Button>
+                </StackPanel>
+            </controls:SettingsCard>
+            <controls:SettingsCard Description="窗口不在前台时，下载完成或失败会弹出系统通知" Glyph="&#xEA8F;" Header="下载完成通知">
+                <ToggleSwitch x:Name="NotifySwitch" Toggled="Switch_Toggled" />
+            </controls:SettingsCard>
+            <controls:SettingsCard Description="切回本窗口时，自动识别剪贴板里新复制的视频链接" Glyph="&#xE77F;" Header="自动识别剪贴板链接">
+                <ToggleSwitch x:Name="ClipSwitch" Toggled="Switch_Toggled" />
+            </controls:SettingsCard>
+
+            <!-- ============ 网络 ============ -->
+            <TextBlock Style="{StaticResource SettingsGroupHeaderStyle}" Text="网络" />
+            <controls:SettingsCard
+                Description="下载 YouTube 等海外网站需要代理。默认跟随系统代理（Clash、v2rayN 等开启「系统代理」即可）"
+                Glyph="&#xE774;"
+                Header="代理">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <ComboBox x:Name="ProxyModeBox" MinWidth="150" SelectionChanged="ProxyModeBox_SelectionChanged">
+                        <ComboBoxItem Content="跟随系统代理" Tag="system" />
+                        <ComboBoxItem Content="不使用代理" Tag="none" />
+                        <ComboBoxItem Content="自定义代理" Tag="custom" />
+                    </ComboBox>
+                    <TextBox
+                        x:Name="ProxyBox"
+                        Width="220"
+                        LostFocus="ProxyBox_LostFocus"
+                        PlaceholderText="http://127.0.0.1:7890" />
+                </StackPanel>
+            </controls:SettingsCard>
+            <controls:SettingsCard Description="B站、抖音、优酷等国内网站不走代理，速度更快也更稳定" Glyph="&#xE81D;" Header="国内网站直连">
+                <ToggleSwitch x:Name="CnDirectSwitch" Toggled="Switch_Toggled" />
+            </controls:SettingsCard>
+
+            <!-- ============ Cookie ============ -->
+            <TextBlock Style="{StaticResource SettingsGroupHeaderStyle}" Text="其他网站登录（Cookie）" />
+            <controls:SettingsCard
+                Description="YouTube 提示「确认你不是机器人」、会员或年龄限制视频需要。B站请使用「B站账号」页扫码登录"
+                Glyph="&#xE8D7;"
+                Header="Cookie 来源">
+                <ComboBox x:Name="CookieModeBox" MinWidth="190" SelectionChanged="CookieModeBox_SelectionChanged">
+                    <ComboBoxItem Content="不使用" Tag="none" />
+                    <ComboBoxItem Content="从浏览器读取" Tag="browser" />
+                    <ComboBoxItem Content="使用 cookies.txt 文件" Tag="file" />
+                </ComboBox>
+            </controls:SettingsCard>
+            <controls:SettingsCard
+                x:Name="BrowserCard"
+                Description="需要先在该浏览器里登录对应网站"
+                Glyph="&#xE7C3;"
+                Header="浏览器">
+                <ComboBox x:Name="BrowserBox" MinWidth="190" SelectionChanged="BrowserBox_SelectionChanged">
+                    <ComboBoxItem Content="Firefox（推荐）" Tag="firefox" />
+                    <ComboBoxItem Content="Chrome" Tag="chrome" />
+                    <ComboBoxItem Content="Edge" Tag="edge" />
+                    <ComboBoxItem Content="Brave" Tag="brave" />
+                    <ComboBoxItem Content="Opera" Tag="opera" />
+                    <ComboBoxItem Content="Vivaldi" Tag="vivaldi" />
+                    <ComboBoxItem Content="Chromium" Tag="chromium" />
+                </ComboBox>
+            </controls:SettingsCard>
+            <controls:SettingsCard x:Name="CookieFileCard" Glyph="&#xE8A5;" Header="cookies.txt 文件">
+                <Button Click="PickCookie_Click" Content="选择文件…" />
+            </controls:SettingsCard>
+            <InfoBar
+                Margin="0,4,0,0"
+                IsClosable="False"
+                IsOpen="True"
+                Message="Chrome / Edge 新版本对 Cookie 做了加密，直接读取经常失败。推荐用 Firefox，或用浏览器扩展「Get cookies.txt LOCALLY」导出 cookies.txt 后在这里选择。"
+                Severity="Informational" />
+
+            <!-- ============ 组件 ============ -->
+            <TextBlock Style="{StaticResource SettingsGroupHeaderStyle}" Text="组件" />
+            <controls:SettingsCard
+                x:Name="YtDlpCard"
+                Description="正在检测…"
+                Glyph="&#xE945;"
+                Header="yt-dlp 解析内核">
+                <Button x:Name="YtDlpButton" Click="UpdateYtDlp_Click" Content="检查更新" />
+            </controls:SettingsCard>
+            <controls:SettingsCard
+                x:Name="FfmpegCard"
+                Description="正在检测…"
+                Glyph="&#xE714;"
+                Header="FFmpeg（合并音视频、转换格式）">
+                <Button
+                    x:Name="FfmpegButton"
+                    Click="Install_Click"
+                    Content="下载安装"
+                    Tag="ffmpeg" />
+            </controls:SettingsCard>
+            <controls:SettingsCard
+                x:Name="DenoCard"
+                Description="正在检测…"
+                Glyph="&#xE943;"
+                Header="Deno（解析 YouTube 必需）">
+                <Button
+                    x:Name="DenoButton"
+                    Click="Install_Click"
+                    Content="下载安装"
+                    Tag="deno" />
+            </controls:SettingsCard>
+            <Border
+                x:Name="ComponentPanel"
+                Margin="0,4,0,0"
+                Style="{StaticResource CardStyle}"
+                Visibility="Collapsed">
+                <StackPanel Spacing="8">
+                    <TextBlock x:Name="ComponentStatus" Style="{StaticResource SecondaryTextStyle}" />
+                    <ProgressBar x:Name="ComponentProgress" IsIndeterminate="True" />
+                </StackPanel>
+            </Border>
+
+            <!-- ============ 关于 ============ -->
+            <TextBlock Style="{StaticResource SettingsGroupHeaderStyle}" Text="关于" />
+            <controls:SettingsCard x:Name="AboutCard" Glyph="&#xE946;" Header="万能视频下载器">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button Click="CheckUpdate_Click" Content="检查新版本" />
+                    <Button Click="OpenRepo_Click" Content="GitHub 项目主页" />
+                </StackPanel>
+            </controls:SettingsCard>
+            <controls:SettingsCard Description="只读取 GitHub 上的版本号，有新版本时提示，不会自动下载" Glyph="&#xE895;" Header="启动时检查新版本">
+                <ToggleSwitch x:Name="UpdateSwitch" Toggled="Switch_Toggled" />
+            </controls:SettingsCard>
+            <controls:SettingsCard Description="设置、日志、B站登录信息和在线下载的组件都保存在这里" Glyph="&#xE8B7;" Header="数据目录">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button Click="OpenData_Click" Content="打开数据目录" />
+                    <Button Click="OpenYtDlpHome_Click" Content="yt-dlp 项目主页" />
+                </StackPanel>
+            </controls:SettingsCard>
+            <TextBlock
+                Margin="2,12,0,0"
+                Style="{StaticResource SecondaryTextStyle}"
+                Text="本软件以 GPL-3.0 许可证开源，仅供个人学习与备份使用。请尊重版权与网站服务条款，不要下载或传播未经授权的内容。" />
+        </StackPanel>
+    </ScrollViewer>
+</Page>

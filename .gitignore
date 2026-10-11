@@ -1,0 +1,27 @@
+# ---- 构建输出 ----
+bin/
+obj/
+dist/
+发布/
+*.user
+*.suo
+.vs/
+.vscode/
+
+# ---- 外部组件（体积大，由 scripts/fetch-tools.ps1 下载，随 Release 发布） ----
+tools/*.exe
+tools/*.zip
+
+# ---- 本地开发环境 ----
+.venv/
+__pycache__/
+*.pyc
+
+# ---- 本地文件 ----
+*.lnk
+*.log
+Thumbs.db
+Desktop.ini
+
+# ---- 千万不要提交登录凭据 ----
+*cookies*.txt

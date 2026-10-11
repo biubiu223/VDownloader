@@ -1,0 +1,569 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="VDownloader.Views.HomePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:models="using:VDownloader.Models"
+    NavigationCacheMode="Required">
+
+    <ScrollViewer x:Name="PageScroller">
+        <StackPanel Padding="0,0,0,40">
+
+            <!-- ============ 顶部横幅（仿 WinUI 3 Gallery） ============ -->
+            <Grid x:Name="HeroGrid" Height="420" SizeChanged="HeroGrid_SizeChanged">
+                <Grid Height="360" VerticalAlignment="Top" IsHitTestVisible="False">
+                    <Rectangle Fill="{ThemeResource HeroBackgroundBrush}" />
+                    <Rectangle Fill="{ThemeResource HeroTintBrush}" />
+                    <!-- 右上角柔和的彩色光晕 -->
+                    <Rectangle>
+                        <Rectangle.Fill>
+                            <RadialGradientBrush Center="0.82,0.05" GradientOrigin="0.82,0.05" RadiusX="0.45" RadiusY="0.9">
+                                <GradientStop Offset="0" Color="#55FF7EB3" />
+                                <GradientStop Offset="1" Color="#00FF7EB3" />
+                            </RadialGradientBrush>
+                        </Rectangle.Fill>
+                    </Rectangle>
+                    <Rectangle>
+                        <Rectangle.Fill>
+                            <RadialGradientBrush Center="1,0.45" GradientOrigin="1,0.45" RadiusX="0.4" RadiusY="0.8">
+                                <GradientStop Offset="0" Color="#553D7BFF" />
+                                <GradientStop Offset="1" Color="#003D7BFF" />
+                            </RadialGradientBrush>
+                        </Rectangle.Fill>
+                    </Rectangle>
+
+                    <!-- 右侧装饰：倾斜悬浮的“播放器 + 下载进度”示意 -->
+                    <Canvas
+                        x:Name="HeroMock"
+                        Margin="0,0,-150,0"
+                        Width="560"
+                        Height="360"
+                        HorizontalAlignment="Right">
+                        <Border
+                            Canvas.Left="150"
+                            Canvas.Top="44"
+                            Width="320"
+                            Height="196"
+                            Background="{ThemeResource HeroMockBrush}"
+                            BorderBrush="{ThemeResource HeroMockStrokeBrush}"
+                            BorderThickness="1"
+                            CornerRadius="14">
+                            <Border.Projection>
+                                <PlaneProjection RotationX="8" RotationY="-24" />
+                            </Border.Projection>
+                            <Grid Padding="12" RowSpacing="10">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Border CornerRadius="8">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                            <GradientStop Offset="0" Color="#FF7EB3" />
+                                            <GradientStop Offset="0.5" Color="#B972F5" />
+                                            <GradientStop Offset="1" Color="#3D7BFF" />
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                    <Grid>
+                                        <Ellipse Width="46" Height="46" Fill="#40FFFFFF" />
+                                        <FontIcon
+                                            Margin="3,0,0,0"
+                                            FontSize="20"
+                                            Foreground="White"
+                                            Glyph="&#xF5B0;" />
+                                        <Border
+                                            Margin="8"
+                                            Padding="6,1"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Top"
+                                            Background="#66000000"
+                                            CornerRadius="4">
+                                            <TextBlock
+                                                FontSize="11"
+                                                FontWeight="SemiBold"
+                                                Foreground="White"
+                                                Text="4K HDR" />
+                                        </Border>
+                                    </Grid>
+                                </Border>
+                                <Grid Grid.Row="1" Height="4">
+                                    <Rectangle Fill="{ThemeResource HeroMockLineBrush}" RadiusX="2" RadiusY="2" />
+                                    <Rectangle
+                                        Width="190"
+                                        HorizontalAlignment="Left"
+                                        Fill="{ThemeResource AccentFillColorDefaultBrush}"
+                                        RadiusX="2"
+                                        RadiusY="2" />
+                                </Grid>
+                                <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="6">
+                                    <Rectangle Width="90" Height="6" Fill="{ThemeResource HeroMockLineBrush}" RadiusX="3" RadiusY="3" />
+                                    <Rectangle Width="50" Height="6" Fill="{ThemeResource HeroMockLineBrush}" RadiusX="3" RadiusY="3" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <Border
+                            Canvas.Left="356"
+                            Canvas.Top="198"
+                            Width="196"
+                            Padding="12,10"
+                            Background="{ThemeResource HeroMockBrush}"
+                            BorderBrush="{ThemeResource HeroMockStrokeBrush}"
+                            BorderThickness="1"
+                            CornerRadius="10">
+                            <Border.Projection>
+                                <PlaneProjection RotationX="8" RotationY="-24" />
+                            </Border.Projection>
+                            <Grid ColumnSpacing="10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border
+                                    Width="30"
+                                    Height="30"
+                                    Background="#FB7299"
+                                    CornerRadius="7">
+                                    <TextBlock
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        FontWeight="Bold"
+                                        Foreground="White"
+                                        Text="B" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="6">
+                                    <TextBlock FontSize="11" Text="8K 超高清 · 下载中" />
+                                    <ProgressBar Value="72" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <Border
+                            Canvas.Left="118"
+                            Canvas.Top="250"
+                            Padding="10,4"
+                            Background="{ThemeResource HeroMockBrush}"
+                            BorderBrush="{ThemeResource HeroMockStrokeBrush}"
+                            BorderThickness="1"
+                            CornerRadius="12">
+                            <Border.Projection>
+                                <PlaneProjection RotationX="8" RotationY="-24" />
+                            </Border.Projection>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon FontSize="12" Foreground="#FF0033" Glyph="&#xF5B0;" />
+                                <TextBlock FontSize="11" Text="YouTube 2160p60" />
+                            </StackPanel>
+                        </Border>
+                    </Canvas>
+                </Grid>
+
+                <StackPanel Margin="38,46,0,0" VerticalAlignment="Top" Spacing="2">
+                    <TextBlock
+                        FontSize="18"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Text="B站 · YouTube · 1800+ 网站" />
+                    <TextBlock Style="{StaticResource TitleLargeTextBlockStyle}" Text="万能视频下载器" />
+                </StackPanel>
+
+                <!-- 横向滚动的功能卡片 -->
+                <ScrollViewer
+                    Margin="0,0,0,8"
+                    VerticalAlignment="Bottom"
+                    HorizontalScrollBarVisibility="Auto"
+                    HorizontalScrollMode="Enabled"
+                    VerticalScrollBarVisibility="Disabled"
+                    VerticalScrollMode="Disabled">
+                    <StackPanel Padding="36,0,36,14" Orientation="Horizontal" Spacing="12">
+                        <Button Click="Tile_Click" Style="{StaticResource HeaderTileStyle}" Tag="new">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Border Width="52" Height="52" HorizontalAlignment="Left" CornerRadius="12">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                            <GradientStop Offset="0" Color="#5B9BFF" />
+                                            <GradientStop Offset="1" Color="#2B5CE6" />
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                    <FontIcon FontSize="24" Foreground="White" Glyph="&#xE896;" />
+                                </Border>
+                                <TextBlock Grid.Row="1" Margin="0,22,0,0" FontSize="18" Text="开始下载" />
+                                <TextBlock Grid.Row="2" Margin="0,6,0,0" Style="{StaticResource SecondaryTextStyle}" Text="粘贴链接，一键获取最清晰的版本，支持批量" />
+                                <FontIcon Grid.Row="3" HorizontalAlignment="Right" FontSize="13" Glyph="&#xE76C;" />
+                            </Grid>
+                        </Button>
+
+                        <Button Click="Tile_Click" Style="{StaticResource HeaderTileStyle}" Tag="account">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Border Width="52" Height="52" HorizontalAlignment="Left" CornerRadius="12">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                            <GradientStop Offset="0" Color="#FF8DBA" />
+                                            <GradientStop Offset="1" Color="#F2557F" />
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                    <FontIcon FontSize="24" Foreground="White" Glyph="&#xED14;" />
+                                </Border>
+                                <TextBlock Grid.Row="1" Margin="0,22,0,0" FontSize="18" Text="B站扫码登录" />
+                                <TextBlock
+                                    x:Name="BiliTileText"
+                                    Grid.Row="2"
+                                    Margin="0,6,0,0"
+                                    Style="{StaticResource SecondaryTextStyle}"
+                                    Text="解锁 1080P+、4K、HDR、杜比视界与 8K" />
+                                <FontIcon Grid.Row="3" HorizontalAlignment="Right" FontSize="13" Glyph="&#xE76C;" />
+                            </Grid>
+                        </Button>
+
+                        <Button Click="Tile_Click" Style="{StaticResource HeaderTileStyle}" Tag="tasks">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Border Width="52" Height="52" HorizontalAlignment="Left" CornerRadius="12">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                            <GradientStop Offset="0" Color="#4CD08A" />
+                                            <GradientStop Offset="1" Color="#14945A" />
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                    <FontIcon FontSize="24" Foreground="White" Glyph="&#xE8FD;" />
+                                </Border>
+                                <TextBlock Grid.Row="1" Margin="0,22,0,0" FontSize="18" Text="下载任务" />
+                                <TextBlock Grid.Row="2" Margin="0,6,0,0" Style="{StaticResource SecondaryTextStyle}" Text="查看进度，断点续传、重试和打开文件" />
+                                <FontIcon Grid.Row="3" HorizontalAlignment="Right" FontSize="13" Glyph="&#xE76C;" />
+                            </Grid>
+                        </Button>
+
+                        <Button Click="Tile_Click" Style="{StaticResource HeaderTileStyle}" Tag="folder">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Border Width="52" Height="52" HorizontalAlignment="Left" CornerRadius="12">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                            <GradientStop Offset="0" Color="#FFC94D" />
+                                            <GradientStop Offset="1" Color="#F09A12" />
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                    <FontIcon FontSize="24" Foreground="White" Glyph="&#xE838;" />
+                                </Border>
+                                <TextBlock Grid.Row="1" Margin="0,22,0,0" FontSize="18" Text="下载文件夹" />
+                                <TextBlock Grid.Row="2" Margin="0,6,0,0" Style="{StaticResource SecondaryTextStyle}" Text="打开保存视频的文件夹" />
+                                <FontIcon Grid.Row="3" HorizontalAlignment="Right" FontSize="13" Glyph="&#xE8A7;" />
+                            </Grid>
+                        </Button>
+
+                        <Button Click="Tile_Click" Style="{StaticResource HeaderTileStyle}" Tag="sites">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Border Width="52" Height="52" HorizontalAlignment="Left" CornerRadius="12">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                            <GradientStop Offset="0" Color="#B98BFF" />
+                                            <GradientStop Offset="1" Color="#7A4DE8" />
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                    <FontIcon FontSize="24" Foreground="White" Glyph="&#xE774;" />
+                                </Border>
+                                <TextBlock Grid.Row="1" Margin="0,22,0,0" FontSize="18" Text="1800+ 网站" />
+                                <TextBlock Grid.Row="2" Margin="0,6,0,0" Style="{StaticResource SecondaryTextStyle}" Text="YouTube、抖音、X、Instagram、Twitch、Niconico…" />
+                                <FontIcon Grid.Row="3" HorizontalAlignment="Right" FontSize="13" Glyph="&#xE8A7;" />
+                            </Grid>
+                        </Button>
+
+                        <Button Click="Tile_Click" Style="{StaticResource HeaderTileStyle}" Tag="settings">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Border Width="52" Height="52" HorizontalAlignment="Left" CornerRadius="12">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                            <GradientStop Offset="0" Color="#5FD3E6" />
+                                            <GradientStop Offset="1" Color="#1C8FB5" />
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                    <FontIcon FontSize="24" Foreground="White" Glyph="&#xE713;" />
+                                </Border>
+                                <TextBlock Grid.Row="1" Margin="0,22,0,0" FontSize="18" Text="设置" />
+                                <TextBlock Grid.Row="2" Margin="0,6,0,0" Style="{StaticResource SecondaryTextStyle}" Text="代理、Cookie、画质偏好与组件更新" />
+                                <FontIcon Grid.Row="3" HorizontalAlignment="Right" FontSize="13" Glyph="&#xE76C;" />
+                            </Grid>
+                        </Button>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+
+            <!-- ============ 新建下载 ============ -->
+            <TextBlock Margin="38,4,0,10" Style="{StaticResource SectionHeaderStyle}" Text="新建下载" />
+            <Border x:Name="NewCard" Margin="36,0,36,0" Style="{StaticResource CardStyle}">
+                <Grid RowSpacing="16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid>
+                        <TextBox
+                            x:Name="UrlBox"
+                            Height="118"
+                            AcceptsReturn="True"
+                            Header="视频链接"
+                            PlaceholderText="粘贴一个或多个链接（每行一个）。也可以直接粘贴 B站分享文字、BV 号、YouTube / 抖音 / X 等网址"
+                            TextChanged="UrlBox_TextChanged"
+                            TextWrapping="Wrap" />
+                        <StackPanel
+                            Margin="0,-6,0,0"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Top"
+                            Orientation="Horizontal"
+                            Spacing="4">
+                            <TextBlock
+                                x:Name="UrlCountText"
+                                Margin="0,0,8,0"
+                                VerticalAlignment="Center"
+                                Style="{StaticResource SecondaryTextStyle}" />
+                            <HyperlinkButton Click="Paste_Click" Padding="8,2">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon FontSize="13" Glyph="&#xE77F;" />
+                                    <TextBlock Text="粘贴" />
+                                </StackPanel>
+                            </HyperlinkButton>
+                            <HyperlinkButton Click="Clear_Click" Padding="8,2">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon FontSize="13" Glyph="&#xE894;" />
+                                    <TextBlock Text="清空" />
+                                </StackPanel>
+                            </HyperlinkButton>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid Grid.Row="1" ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <ComboBox
+                            x:Name="QualityBox"
+                            HorizontalAlignment="Stretch"
+                            Header="画质"
+                            SelectionChanged="Option_Changed" />
+                        <ComboBox
+                            x:Name="CodecBox"
+                            Grid.Column="1"
+                            HorizontalAlignment="Stretch"
+                            Header="编码偏好"
+                            SelectionChanged="Option_Changed" />
+                        <ComboBox
+                            x:Name="ContainerBox"
+                            Grid.Column="2"
+                            HorizontalAlignment="Stretch"
+                            Header="视频格式"
+                            SelectionChanged="Option_Changed" />
+                    </Grid>
+
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="28">
+                        <CheckBox x:Name="PlaylistCheck" Click="Option_Changed" Content="下载整个合集 / 播放列表" />
+                        <CheckBox x:Name="SubsCheck" Click="Option_Changed" Content="下载字幕 / 弹幕" />
+                        <CheckBox x:Name="ThumbCheck" Click="Option_Changed" Content="嵌入封面" />
+                    </StackPanel>
+
+                    <Grid Grid.Row="3" ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="DirBox" Header="保存到" IsReadOnly="True" />
+                        <Button
+                            Grid.Column="1"
+                            VerticalAlignment="Bottom"
+                            Click="ChangeDir_Click"
+                            Content="更改…" />
+                        <Button
+                            Grid.Column="2"
+                            VerticalAlignment="Bottom"
+                            Click="OpenDir_Click"
+                            ToolTipService.ToolTip="打开文件夹">
+                            <FontIcon FontSize="16" Glyph="&#xE838;" />
+                        </Button>
+                    </Grid>
+
+                    <Grid Grid.Row="4" ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center" Orientation="Horizontal" Spacing="8">
+                            <Ellipse
+                                x:Name="BiliDot"
+                                Width="8"
+                                Height="8"
+                                Fill="{ThemeResource SystemFillColorCautionBrush}" />
+                            <TextBlock
+                                x:Name="BiliHintText"
+                                VerticalAlignment="Center"
+                                Style="{StaticResource SecondaryTextStyle}"
+                                Text="正在检查 B站登录状态…" />
+                            <HyperlinkButton
+                                x:Name="BiliLoginLink"
+                                Padding="4,0"
+                                Click="BiliLogin_Click"
+                                Content="去登录"
+                                FontSize="12"
+                                Visibility="Collapsed" />
+                        </StackPanel>
+                        <Button
+                            x:Name="ParseButton"
+                            Grid.Column="1"
+                            MinWidth="140"
+                            Click="Parse_Click">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <ProgressRing
+                                    x:Name="ParseRing"
+                                    Width="16"
+                                    Height="16"
+                                    IsActive="False"
+                                    Visibility="Collapsed" />
+                                <FontIcon x:Name="ParseIcon" FontSize="14" Glyph="&#xE71E;" />
+                                <TextBlock x:Name="ParseText" Text="解析并选择画质" />
+                            </StackPanel>
+                        </Button>
+                        <Button
+                            x:Name="DownloadButton"
+                            Grid.Column="2"
+                            MinWidth="140"
+                            Click="Download_Click"
+                            Style="{StaticResource AccentButtonStyle}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon FontSize="14" Glyph="&#xE896;" />
+                                <TextBlock Text="开始下载" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- ============ 最近任务 ============ -->
+            <Grid Margin="38,4,36,10">
+                <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="最近任务" />
+                <HyperlinkButton
+                    Margin="0,22,0,0"
+                    HorizontalAlignment="Right"
+                    Click="AllTasks_Click"
+                    Content="查看全部" />
+            </Grid>
+            <Border
+                x:Name="RecentEmpty"
+                Margin="36,0,36,0"
+                Padding="20,28"
+                Style="{StaticResource CardStyle}">
+                <StackPanel HorizontalAlignment="Center" Spacing="6">
+                    <FontIcon FontSize="28" Foreground="{ThemeResource TextFillColorTertiaryBrush}" Glyph="&#xE896;" />
+                    <TextBlock HorizontalAlignment="Center" Style="{StaticResource SecondaryTextStyle}" Text="还没有下载记录，粘贴一个链接试试吧" />
+                </StackPanel>
+            </Border>
+            <ItemsRepeater x:Name="RecentRepeater" Margin="36,0,36,0">
+                <ItemsRepeater.Layout>
+                    <UniformGridLayout
+                        ItemsStretch="Fill"
+                        MinColumnSpacing="12"
+                        MinItemHeight="96"
+                        MinItemWidth="300"
+                        MinRowSpacing="12" />
+                </ItemsRepeater.Layout>
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate x:DataType="models:DownloadTask">
+                        <Button
+                            Padding="16,12"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch"
+                            HorizontalContentAlignment="Stretch"
+                            VerticalContentAlignment="Stretch"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            Click="RecentItem_Click"
+                            CornerRadius="8">
+                            <Grid ColumnSpacing="14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border
+                                    Width="40"
+                                    Height="40"
+                                    VerticalAlignment="Top"
+                                    Background="{x:Bind BadgeBrush, Mode=OneWay}"
+                                    CornerRadius="9">
+                                    <TextBlock
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        FontSize="16"
+                                        FontWeight="SemiBold"
+                                        Foreground="White"
+                                        Text="{x:Bind Badge, Mode=OneWay}" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="3">
+                                    <TextBlock
+                                        MaxLines="1"
+                                        Style="{StaticResource BodyStrongTextBlockStyle}"
+                                        Text="{x:Bind Title, Mode=OneWay}"
+                                        TextTrimming="CharacterEllipsis" />
+                                    <TextBlock
+                                        MaxLines="1"
+                                        Style="{StaticResource SecondaryTextStyle}"
+                                        Text="{x:Bind DetailText, Mode=OneWay}"
+                                        TextTrimming="CharacterEllipsis" />
+                                    <ProgressBar
+                                        Margin="0,6,0,2"
+                                        IsIndeterminate="{x:Bind IsIndeterminate, Mode=OneWay}"
+                                        ShowError="{x:Bind ShowError, Mode=OneWay}"
+                                        ShowPaused="{x:Bind ShowPaused, Mode=OneWay}"
+                                        Value="{x:Bind Progress, Mode=OneWay}" />
+                                    <TextBlock
+                                        MaxLines="1"
+                                        Foreground="{x:Bind StatusBrush, Mode=OneWay}"
+                                        Style="{StaticResource CaptionTextBlockStyle}"
+                                        Text="{x:Bind StatusLine, Mode=OneWay}"
+                                        TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                            </Grid>
+                        </Button>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </StackPanel>
+    </ScrollViewer>
+</Page>
