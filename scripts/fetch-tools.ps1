@@ -34,10 +34,13 @@ function Get-File([string]$url, [string]$name) {
 }
 
 function Assert-Sha256([string]$file, [string]$checksumText, [string]$fileName) {
-    # 从校验文本里找到对应文件的 64 位十六进制哈希（兼容 sha256sum 格式和 PowerShell 输出格式）
-    $line = ($checksumText -split "`r?`n") | Where-Object { $_ -match [regex]::Escape($fileName) } | Select-Object -First 1
+    # 从校验文本里找到对应文件的 64 位十六进制哈希。兼容三种格式：
+    #   sha256sum 格式（“哈希  文件名”同一行）、纯哈希、PowerShell Get-FileHash 输出（Hash 和 Path 分两行）
+    $hexRe = '\b[0-9A-Fa-f]{64}\b'
+    $line = ($checksumText -split "`r?`n") |
+        Where-Object { $_ -match [regex]::Escape($fileName) -and $_ -match $hexRe } | Select-Object -First 1
     $source = if ($line) { $line } else { $checksumText }
-    $m = [regex]::Match($source, '\b[0-9A-Fa-f]{64}\b')
+    $m = [regex]::Match($source, $hexRe)
     if (-not $m.Success) { throw "校验文件里没有找到 $fileName 的 SHA-256" }
     $expected = $m.Value.ToLower()
     $actual = (Get-FileHash $file -Algorithm SHA256).Hash.ToLower()
