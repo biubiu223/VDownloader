@@ -32,20 +32,12 @@ jobs:
         shell: pwsh
         run: choco upgrade innosetup -y --no-progress
 
-      # 用 Windows PowerShell 5.1（和本地开发环境一致）。出错时把原因写成注解，在运行摘要页直接可见
+      # 用 Windows PowerShell 5.1（和本地开发环境一致）。
+      # 注意：run 里只能写纯 ASCII —— Windows PowerShell 会按 ANSI 读取 GitHub 生成的临时脚本，中文会导致语法错误。
+      # 具体逻辑在 scripts/ci-build.ps1（UTF-8 BOM），出错时会输出注解，在运行摘要页直接可见。
       - name: 下载组件并构建
         shell: powershell
-        run: |
-          $ErrorActionPreference = 'Stop'
-          $version = '${{ github.event.inputs.version }}'
-          if ('${{ github.ref_type }}' -eq 'tag') { $version = '${{ github.ref_name }}' }
-          try {
-            & .\scripts\build-release.ps1 -Version $version -FetchTools
-          } catch {
-            $msg = ($_.Exception.Message + ' | ' + $_.InvocationInfo.PositionMessage) -replace "`r?`n", ' '
-            Write-Host "::error title=构建失败::$msg"
-            exit 1
-          }
+        run: .\scripts\ci-build.ps1 -RefType '${{ github.ref_type }}' -RefName '${{ github.ref_name }}' -InputVersion '${{ github.event.inputs.version }}'
 
       - name: 上传构建产物
         uses: actions/upload-artifact@v7
